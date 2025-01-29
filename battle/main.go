@@ -21,7 +21,7 @@ var botRoomB *lksdk.Room
 
 const (
 	maxVideoLate = 100 // nearly 0.2s for fhd video
-	maxAudioLate = 20  // 0.4s for audio
+	maxAudioLate = 5  // 0.1s for audio
 	roomNameA    = "A"
 	roomNameB    = "C"
 )
