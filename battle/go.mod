@@ -3,8 +3,6 @@ module battle
 go 1.23.1
 
 require (
-	github.com/livekit/protocol v1.32.1-0.20250127091625-9a579a69ba38
-	github.com/livekit/server-sdk-go v1.1.8
 	github.com/livekit/server-sdk-go/v2 v2.4.2
 	github.com/pion/rtp v1.8.11
 	github.com/pion/webrtc/v4 v4.0.8
@@ -35,6 +33,7 @@ require (
 	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20230125210925-54e8a70427c1 // indirect
 	github.com/livekit/mediatransportutil v0.0.0-20241220010243-a2bdee945564 // indirect
+	github.com/livekit/protocol v1.32.1-0.20250127091625-9a579a69ba38 // indirect
 	github.com/livekit/psrpc v0.6.1-0.20241018124827-1efff3d113a8 // indirect
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/nats-io/nats.go v1.38.0 // indirect
@@ -54,7 +53,6 @@ require (
 	github.com/pion/stun/v3 v3.0.0 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pion/turn/v4 v4.0.0 // indirect
-	github.com/pion/webrtc/v3 v3.2.24 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.4.0 // indirect
 	github.com/redis/go-redis/v9 v9.7.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
