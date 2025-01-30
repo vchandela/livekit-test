@@ -9,9 +9,11 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
-	"github.com/livekit/server-sdk-go/v2/pkg/samplebuilder"
+	"github.com/livekit/mediatransportutil/pkg/pacer"
 	lksdk "github.com/livekit/server-sdk-go/v2"
+	"github.com/livekit/server-sdk-go/v2/pkg/samplebuilder"
 	"github.com/pion/rtp/codecs"
 	"github.com/pion/webrtc/v4"
 )
@@ -21,13 +23,13 @@ var botRoomB *lksdk.Room
 
 const (
 	maxVideoLate = 100 // nearly 0.2s for fhd video
-	maxAudioLate = 5  // 0.1s for audio
+	maxAudioLate = 5   // 0.1s for audio
 	roomNameA    = "A"
 	roomNameB    = "C"
 )
 
 type TrackAcceptor struct {
-	sb         *samplebuilder.SampleBuilder
+	sb         *samplebuilder.SampleBuilder //[]rtp_packet -> []media_frames
 	track      *webrtc.TrackRemote
 	localTrack *lksdk.LocalTrack
 }
@@ -42,9 +44,9 @@ func (t *TrackAcceptor) start(mimeType, roomName string) {
 
 		framePackets := t.sb.PopPackets()
 		if len(framePackets) == 0 {
-		fmt.Printf("room: %v, mime: %v, No frames popped yet, waiting for more packets...\n", roomName, mimeType)
+			fmt.Printf("room: %v, mime: %v, No packets popped yet, waiting for more packets...\n", roomName, mimeType)
 		} else {
-		fmt.Printf("room: %v, mime: %v, Popped %d packets for a complete frame\n", roomName, mimeType, len(framePackets))
+			fmt.Printf("room: %v, mime: %v, Popped %d packets for a complete frame\n", roomName, mimeType, len(framePackets))
 		}
 
 		for _, p := range framePackets {
@@ -133,7 +135,14 @@ func relayRoom(wg *sync.WaitGroup, ctx context.Context, host, roomName, token st
 	// 	ParticipantIdentity: "1002",
 	// }, roomCB)
 
-	room, err := lksdk.ConnectToRoomWithToken(host, token, roomCB)
+	// Control total output bitrate to 10Mbps with 1s max latency
+	pf := pacer.NewPacerFactory(
+		pacer.LeakyBucketPacer,
+		pacer.WithBitrate(10000000),
+		pacer.WithMaxLatency(time.Second),
+	)
+
+	room, err := lksdk.ConnectToRoomWithToken(host, token, roomCB, lksdk.WithPacer(pf))
 	if err != nil {
 		fmt.Printf("Failed to connect to room %s due to error: %s", roomName, err.Error())
 		return
@@ -157,8 +166,8 @@ func main() {
 	// apiKey := "devkey"
 	// apiSecret := "secret"
 	host := "wss://moj-livestreaming-service.staging.sharechat.com"
-	tokenA := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzgxNzcxOTMsImlzcyI6IkFQSUxOSmh4RnZqZFVuNCIsIm5iZiI6MTczODE3MzU5Mywic3ViIjoiMTAwMiIsInZpZGVvIjp7InJvb20iOiJBIiwicm9vbUpvaW4iOnRydWV9fQ.B6zwpTcMlH6ID6Dg7c0fWkoa8NyFVguBA54e0UmGL-E"
-	tokenB := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzgxNzcxOTgsImlzcyI6IkFQSUxOSmh4RnZqZFVuNCIsIm5iZiI6MTczODE3MzU5OCwic3ViIjoiMTAwMiIsInZpZGVvIjp7InJvb20iOiJDIiwicm9vbUpvaW4iOnRydWV9fQ.lpfV02sqdR5HvyKZxCC3NcSkyobbndag6G3oQ1AuXHk"
+	tokenA := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzgyMzAwOTYsImlzcyI6IkFQSUxOSmh4RnZqZFVuNCIsIm5iZiI6MTczODIyNjQ5Niwic3ViIjoiMTAwMiIsInZpZGVvIjp7InJvb20iOiJBIiwicm9vbUpvaW4iOnRydWV9fQ.aybiDgBYDnueghyWJM_YAVxPXPiecghYfXYs2V_o9eI"
+	tokenB := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzgyMzAxMDQsImlzcyI6IkFQSUxOSmh4RnZqZFVuNCIsIm5iZiI6MTczODIyNjUwNCwic3ViIjoiMTAwMiIsInZpZGVvIjp7InJvb20iOiJDIiwicm9vbUpvaW4iOnRydWV9fQ.5NMDuE9lFVWfPpJxeWzrfk5lEBkNRX4JgnhlhxrmpEo"
 	// roomClient := lksdk.NewRoomServiceClient(host, apiKey, apiSecret)
 
 	// // list rooms
